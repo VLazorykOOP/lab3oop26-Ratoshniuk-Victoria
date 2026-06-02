@@ -1,15 +1,20 @@
-﻿#include <iostream>
+﻿
+#include <iostream>
 #include <cmath>
-using namespace std;
+#include <algorithm> // Для std::min
+
+            using namespace std;
 
 class Triangle {
     double a, b, c;
     int color;
 
 public:
-
+    // Конструктор за замовчуванням
     Triangle() : a(1), b(1), c(1), color(0) {}
-    Triangle(double a, double b, double c, int color = 0) {
+
+    // Конструктор з параметрами: спочатку даємо безпечні значення, потім перевіряємо
+    Triangle(double a, double b, double c, int color = 0) : a(1), b(1), c(1), color(0) {
         setSides(a, b, c);
         setColor(color);
     }
@@ -22,7 +27,7 @@ public:
             this->c = c;
         }
         else {
-            cout << "Error: incorrect triangle\n";
+            cout << "Error: incorrect triangle. Keeping previous/default values.\n";
         }
     }
 
@@ -61,7 +66,6 @@ class VectorLong {
     static int count;
 
 public:
-
     VectorLong() {
         size = 1;
         arr = new long[size] {0};
@@ -101,9 +105,14 @@ public:
 
     VectorLong(const VectorLong& v) {
         size = v.size;
-        arr = new long[size];
-        for (int i = 0; i < size; i++)
-            arr[i] = v.arr[i];
+        if (size > 0) {
+            arr = new long[size];
+            for (int i = 0; i < size; i++)
+                arr[i] = v.arr[i];
+        }
+        else {
+            arr = nullptr;
+        }
         state = v.state;
         count++;
     }
@@ -112,13 +121,19 @@ public:
         if (this != &v) {
             delete[] arr;
             size = v.size;
-            arr = new long[size];
-            for (int i = 0; i < size; i++)
-                arr[i] = v.arr[i];
+            if (size > 0) {
+                arr = new long[size];
+                for (int i = 0; i < size; i++)
+                    arr[i] = v.arr[i];
+            }
+            else {
+                arr = nullptr;
+            }
             state = v.state;
         }
         return *this;
     }
+
     ~VectorLong() {
         delete[] arr;
         count--;
@@ -138,7 +153,8 @@ public:
         return 0;
     }
 
-    VectorLong add(VectorLong& v) {
+    // Змінено на const VectorLong&
+    VectorLong add(const VectorLong& v) {
         int n = min(size, v.size);
         VectorLong res(n);
         for (int i = 0; i < n; i++)
@@ -146,7 +162,8 @@ public:
         return res;
     }
 
-    VectorLong sub(VectorLong& v) {
+    // Змінено на const VectorLong&
+    VectorLong sub(const VectorLong& v) {
         int n = min(size, v.size);
         VectorLong res(n);
         for (int i = 0; i < n; i++)
@@ -161,7 +178,8 @@ public:
         return res;
     }
 
-    bool isLess(VectorLong& v) {
+    // Змінено на const VectorLong&
+    bool isLess(const VectorLong& v) {
         for (int i = 0; i < min(size, v.size); i++)
             if (arr[i] >= v.arr[i]) return false;
         return true;
@@ -186,59 +204,47 @@ int main() {
 
     do {
         cout << "\n===== MENU =====\n";
-        cout << "1 - Triangle\n";
-        cout << "2 - Vector\n";
+        cout << "1 - Triangle (Demo)\n";
+        cout << "2 - Vector (Demo)\n";
         cout << "0 - Exit\n";
-        cin >> choice;
+        cout << "Your choice: ";
+
+        // Перевірка на коректність вводу, щоб уникнути зациклювання при введенні літер
+        if (!(cin >> choice)) {
+            cout << "Invalid input! Please enter a number.\n";
+            cin.clear();
+            cin.ignore(10000, '\n');
+            continue;
+        }
+
         switch (choice) {
-
         case 1: {
-            double a, b, c;
-            int color;
-            cout << "Enter sides a b c: ";
-            cin >> a >> b >> c;
-            cout << "Enter color: ";
-            cin >> color;
+            cout << "\n--- Testing Triangle ---\n";
+            Triangle t1(3, 4, 5, 1);
+            t1.print();
 
-            Triangle t(a, b, c, color);
-            t.print();
+            Triangle t2(1, 1, 10); // Некоректний трикутник
+            t2.print();
             break;
         }
-
         case 2: {
-            int n;
-            cout << "Enter size: ";
-            cin >> n;
+            cout << "\n--- Testing Vector ---\n";
+            VectorLong v1(3, 5);
+            VectorLong v2(3, 2);
+            v1.print();
+            v2.print();
 
-            VectorLong v1(n), v2(n);
-
-            cout << "Enter elements of vector 1:\n";
-            for (int i = 0; i < n; i++) {
-                long x;
-                cin >> x;
-                v1.set(i, x);
-            }
-
-            cout << "Enter elements of vector 2:\n";
-            for (int i = 0; i < n; i++) {
-                long x;
-                cin >> x;
-                v2.set(i, x);
-            }
-
-            VectorLong sum = v1.add(v2);
-            VectorLong diff = v1.sub(v2);
-            VectorLong mul = v1.mul(2);
-
-            cout << "Sum: "; sum.print();
-            cout << "Diff: "; diff.print();
-            cout << "Mul *2: "; mul.print();
-
+            VectorLong v3 = v1.add(v2);
+            cout << "Sum ";
+            v3.print();
             break;
         }
-
+        case 0:
+            cout << "Exiting program...\n";
+            break;
+        default:
+            cout << "Wrong option! Try again.\n";
         }
-
     } while (choice != 0);
 
     return 0;
